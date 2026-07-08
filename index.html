@@ -208,20 +208,31 @@ let cubies=[];
 
 function initCubies(){
   cubies=[];
-  // 上面中心块与前面中心块随机为阴(2)或阳(3)，四种组合均等
-  const topCenter=Math.random()<0.5?YIN:YANG;
-  const frontCenter=Math.random()<0.5?YIN:YANG;
+  // 六个面中心块随机分配3阴(2)3阳(3)，保证阴阳总数平衡
+  const centerFaces=['py','ny','px','nx','pz','nz'];
+  // Fisher-Yates洗牌，前3个=阳(3点)，后3个=阴(2点)
+  const shuffled=[...centerFaces];
+  for(let i=shuffled.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];
+  }
+  const centerVal={};
+  for(let i=0;i<3;i++)centerVal[shuffled[i]]=YANG;
+  for(let i=3;i<6;i++)centerVal[shuffled[i]]=YIN;
+
   for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++)for(let z=-1;z<=1;z++){
     if(!x&&!y&&!z)continue;
+    // 面中心块：恰好两个坐标为0
+    const isFaceCenter=[x,y,z].filter(v=>v===0).length===2;
     cubies.push({
       x,y,z,
       faces:{
-        px:x===1?YIN:null,
-        nx:x===-1?YANG:null,
-        py:y===1?(x===0&&z===0?topCenter:YIN):null,
-        ny:y===-1?YANG:null,
-        pz:z===1?(x===0&&y===0?frontCenter:YIN):null,
-        nz:z===-1?YANG:null
+        px:x===1?(isFaceCenter&&y===0&&z===0?centerVal.px:YIN):null,
+        nx:x===-1?(isFaceCenter&&y===0&&z===0?centerVal.nx:YANG):null,
+        py:y===1?(isFaceCenter&&x===0&&z===0?centerVal.py:YIN):null,
+        ny:y===-1?(isFaceCenter&&x===0&&z===0?centerVal.ny:YANG):null,
+        pz:z===1?(isFaceCenter&&x===0&&y===0?centerVal.pz:YIN):null,
+        nz:z===-1?(isFaceCenter&&x===0&&y===0?centerVal.nz:YANG):null
       }
     });
   }
